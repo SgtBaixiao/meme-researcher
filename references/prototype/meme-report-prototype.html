@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meme 百科报告页 · 原型三方案</title>
+<!--
+  PROTOTYPE — 扔弃型（原型技能 UI 分支）：评审"梗百科报告页"的三种截然不同风格。
+  非最终模板。数据 = 真实"华夏神族大战羊人"调查内容（图片热链，离线时显示占位）。
+  切换：地址栏 ?variant=a|b|c，或底部悬浮栏。
+-->
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif; }
+
+/* 原型标记条 */
+.proto-badge {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: #111; color: #ffd166; font: 11px/1.4 ui-monospace,Consolas,monospace;
+  padding: 5px 14px; text-align: center; letter-spacing: 0.05em;
+}
+/* 悬浮切换栏 */
+.switcher {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 1000;
+  display: flex; gap: 6px; background: rgba(17,17,17,.92); border: 1px solid #333;
+  border-radius: 999px; padding: 6px 10px; backdrop-filter: blur(8px);
+  font: 12px/1 ui-monospace,Consolas,monospace; color: #ccc;
+}
+.switcher button {
+  border: 0; background: transparent; color: inherit; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px; font: inherit;
+}
+.switcher button[data-v="a"]:hover { background:#2563eb; color:#fff; }
+.switcher button[data-v="b"]:hover { background:#c2410c; color:#fff; }
+.switcher button[data-v="c"]:hover { background:#a855f7; color:#fff; }
+.switcher button.on { background:#fff; color:#111; }
+
+img.meme { background:#e8e8e8; display:block; width:100%; object-fit:cover; }
+img.meme[alt="cover1"]{aspect-ratio:16/9} img.meme[alt="cover2"]{aspect-ratio:16/9}
+img.meme[alt="img3"]{aspect-ratio:1/1} img.meme[alt="img4"]{aspect-ratio:1/1}
+
+/* ============================================================
+   VARIANT A — 百科经典（蓝白、hero + 侧边目录 + 章节卡）
+============================================================ */
+body[data-variant="a"] { background:#f6f8fb; color:#1a2233; }
+body[data-variant="a"] .hero {
+  background: linear-gradient(135deg,#1e3a8a,#2563eb 55%,#3b82f6);
+  color:#fff; padding:56px 24px 44px; text-align:center;
+}
+body[data-variant="a"] .kicker { letter-spacing:.35em; font-size:12px; opacity:.85; }
+body[data-variant="a"] h1 { font-size:clamp(28px,5vw,44px); font-weight:800; margin-top:8px; }
+body[data-variant="a"] .summary { max-width:680px; margin:14px auto 0; font-size:15px; opacity:.95; }
+body[data-variant="a"] .chips { margin-top:18px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+body[data-variant="a"] .chip { background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); border-radius:999px; padding:4px 14px; font-size:12.5px; }
+body[data-variant="a"] .layout { max-width:1080px; margin:0 auto; display:grid; grid-template-columns:220px 1fr; gap:28px; padding:28px 20px 80px; }
+body[data-variant="a"] .toc { position:sticky; top:24px; align-self:start; background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:18px; font-size:13.5px; }
+body[data-variant="a"] .toc a { color:#2563eb; text-decoration:none; display:block; padding:3px 0; }
+body[data-variant="a"] .toc a:hover { text-decoration:underline; }
+body[data-variant="a"] .section { margin-top:34px; padding-bottom:8px; border-bottom:2px solid #2563eb; font-size:21px; font-weight:700; }
+body[data-variant="a"] .content p { margin:12px 0; color:#2b3648; line-height:1.75; }
+body[data-variant="a"] blockquote { background:#f4f7fb; border-left:4px solid #2563eb; border-radius:6px; padding:10px 16px; margin:12px 0; }
+body[data-variant="a"] ul, body[data-variant="a"] ol { margin:10px 0 10px 24px; }
+body[data-variant="a"] .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:14px; }
+body[data-variant="a"] .gallery figure { background:#fff; border:1px solid #e5e9f0; border-radius:12px; overflow:hidden; }
+body[data-variant="a"] .gallery figcaption { padding:8px 10px; font-size:12.5px; color:#55627a; }
+body[data-variant="a"] .tl { border-left:3px solid #2563eb; margin:16px 0 0 8px; padding-left:18px; }
+body[data-variant="a"] .tl li { margin:10px 0; position:relative; list-style:none; }
+body[data-variant="a"] .tl li::before { content:""; position:absolute; left:-24px; top:7px; width:10px; height:10px; border-radius:50%; background:#2563eb; }
+body[data-variant="a"] .tl b { color:#1d4ed8; }
+body[data-variant="a"] .src { list-style:none; }
+body[data-variant="a"] .src li { background:#fff; border:1px solid #e5e9f0; border-radius:10px; padding:10px 14px; margin:8px 0; }
+body[data-variant="a"] .src a { color:#2563eb; }
+body[data-variant="a"] .footer { margin-top:40px; color:#55627a; font-size:12.5px; }
+
+/* ============================================================
+   VARIANT B — 杂志卡片流（暖纸色、大封面、横向时间轴、无侧栏）
+============================================================ */
+body[data-variant="b"] { background:#faf6ef; color:#2a2318; font-family:Georgia,"Noto Serif SC","Songti SC",serif; }
+body[data-variant="b"] .hero {
+  max-width:1080px; margin:0 auto; padding:64px 24px 24px; text-align:center;
+}
+body[data-variant="b"] .kicker { font:11px/1.4 ui-monospace,Consolas,monospace; letter-spacing:.4em; color:#a1602b; }
+body[data-variant="b"] h1 { font-size:clamp(30px,6vw,52px); font-weight:900; letter-spacing:.02em; margin-top:10px; }
+body[data-variant="b"] .summary { max-width:640px; margin:16px auto 0; font-size:16px; line-height:1.8; color:#5c4a33; }
+body[data-variant="b"] .chips { margin-top:18px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+body[data-variant="b"] .chip { border:1px solid #d8c9ae; border-radius:2px; padding:4px 12px; font:12px/1.6 ui-monospace,Consolas,monospace; color:#6b5636; }
+body[data-variant="b"] .layout { max-width:1080px; margin:0 auto; padding:28px 20px 80px; }
+body[data-variant="b"] .content { column-count:2; column-gap:44px; column-rule:1px solid #e5dcc8; }
+body[data-variant="b"] .content > * { break-inside: avoid; }
+body[data-variant="b"] .section { margin-top:26px; font-size:22px; font-weight:900; }
+body[data-variant="b"] .section::after { content:""; display:block; width:42px; height:3px; background:#c2410c; margin-top:6px; }
+body[data-variant="b"] .content p { margin:10px 0; line-height:1.8; color:#3c3222; }
+body[data-variant="b"] blockquote { border-left:3px solid #c2410c; padding:4px 0 4px 16px; margin:12px 0; font-style:italic; color:#6b5636; }
+body[data-variant="b"] ul { margin:10px 0 10px 22px; }
+body[data-variant="b"] .gallery { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+body[data-variant="b"] .gallery figure { background:#fff; border:1px solid #e5dcc8; padding:8px; }
+body[data-variant="b"] .gallery figcaption { padding:6px 2px 0; font:11.5px/1.6 ui-monospace,Consolas,monospace; color:#7a6544; }
+body[data-variant="b"] .tlwrap { overflow-x:auto; padding:14px 0 6px; }
+body[data-variant="b"] .tl { display:flex; gap:0; list-style:none; min-width:max-content; }
+body[data-variant="b"] .tl li { width:190px; padding:14px 16px 10px 0; border-top:3px solid #d8c9ae; position:relative; }
+body[data-variant="b"] .tl li::before { content:""; position:absolute; top:-7px; left:0; width:11px; height:11px; border-radius:50%; background:#c2410c; }
+body[data-variant="b"] .tl b { display:block; font:12px/1.4 ui-monospace,Consolas,monospace; color:#a1602b; margin-bottom:4px; }
+body[data-variant="b"] .tl span { font-size:13px; color:#3c3222; }
+body[data-variant="b"] .src { list-style:none; counter-reset:src; }
+body[data-variant="b"] .src li { counter-increment:src; border-bottom:1px dashed #d8c9ae; padding:8px 0; }
+body[data-variant="b"] .src li::before { content:counter(src,decimal-leading-zero); font:12px/1.4 ui-monospace,Consolas,monospace; color:#a1602b; margin-right:10px; }
+body[data-variant="b"] .src a { color:#a3480e; }
+body[data-variant="b"] .footer { margin-top:36px; font:12px/1.8 ui-monospace,Consolas,monospace; color:#8a7355; }
+
+/* ============================================================
+   VARIANT C — 暗色档案馆（终端/霓虹、纵向时间轴、网格噪点）
+============================================================ */
+body[data-variant="c"] { background:#0b0d14; color:#d7dce6; font-family:ui-monospace,"SFMono-Regular",Consolas,"PingFang SC",monospace; }
+body[data-variant="c"] .hero { padding:64px 24px 28px; text-align:center; background:
+  radial-gradient(1200px 500px at 50% -100px, rgba(168,85,247,.18), transparent),
+  radial-gradient(900px 400px at 85% 0, rgba(59,130,246,.14), transparent); }
+body[data-variant="c"] .kicker { color:#a78bfa; letter-spacing:.3em; font-size:11px; }
+body[data-variant="c"] h1 { font-size:clamp(26px,5vw,42px); font-weight:800; color:#f5f3ff; letter-spacing:.06em; margin-top:10px;
+  text-shadow:0 0 24px rgba(168,85,247,.5); }
+body[data-variant="c"] .summary { max-width:660px; margin:14px auto 0; color:#9aa3b5; font-size:13.5px; line-height:1.9; }
+body[data-variant="c"] .chips { margin-top:16px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+body[data-variant="c"] .chip { border:1px solid #2c3450; border-radius:4px; padding:3px 12px; font-size:11.5px; color:#8fd3ff; background:#0e1220; }
+body[data-variant="c"] .layout { max-width:900px; margin:0 auto; padding:26px 20px 80px; }
+body[data-variant="c"] .content { position:relative; }
+body[data-variant="c"] .section { margin-top:34px; color:#a78bfa; font-size:16px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+body[data-variant="c"] .section::before { content:"// "; color:#4b5563; }
+body[data-variant="c"] .content p { margin:10px 0; color:#b6bfcf; line-height:1.85; font-size:13.5px; }
+body[data-variant="c"] blockquote { border-left:2px solid #a855f7; background:rgba(168,85,247,.07); padding:10px 14px; margin:12px 0; color:#d8c9f5; }
+body[data-variant="c"] ul { margin:10px 0 10px 24px; }
+body[data-variant="c"] .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:12px; }
+body[data-variant="c"] .gallery figure { border:1px solid #2c3450; background:#0e1220; }
+body[data-variant="c"] .gallery figcaption { padding:6px 8px; font-size:11px; color:#7c8698; }
+body[data-variant="c"] .tl { list-style:none; margin-left:10px; border-left:2px dashed #2c3450; padding-left:20px; }
+body[data-variant="c"] .tl li { margin:14px 0; position:relative; }
+body[data-variant="c"] .tl li::before { content:"▸"; position:absolute; left:-26px; color:#a855f7; }
+body[data-variant="c"] .tl b { color:#8fd3ff; font-weight:700; }
+body[data-variant="c"] .tl span { color:#9aa3b5; font-size:13px; }
+body[data-variant="c"] .src { list-style:none; }
+body[data-variant="c"] .src li { border:1px solid #1f2739; background:#0e1220; padding:8px 12px; margin:8px 0; }
+body[data-variant="c"] .src a { color:#8fd3ff; text-decoration:none; }
+body[data-variant="c"] .src a:hover { text-decoration:underline; }
+body[data-variant="c"] .footer { margin-top:36px; color:#4b5563; font-size:11.5px; }
+body[data-variant="c"] .footer::before { content:"┌────────────────────────────────────────┐\A"; white-space:pre; }
+</style>
+</head>
+<body data-variant="a">
+
+<div class="proto-badge">PROTOTYPE — 已由 house-style 技能取代（统一风格=极简纸质·米白+橙）。本文件仅供选型回顾，不再作为模板源。</div>
+
+<header class="hero">
+  <p class="kicker">MEME DIGGER · 网络梗百科</p>
+  <h1>「华夏神族大战羊人」</h1>
+  <p class="summary">B 站 2026 年 7-8 月爆火的"伪史宇宙"讽刺梗：把抖音式伪史论内容农场的离谱说法当真，构建出"华夏神族驾驶月球飞船、动用永乐大典科技，大战'羊人'（洋人）"的荒诞战争世界观，用一本正经的战争叙事嘲讽伪史论。</p>
+  <div class="chips">
+    <span class="chip">🌱 最早 2024-09</span>
+    <span class="chip">🔥 活跃至 2026-08</span>
+    <span class="chip">🖼 梗图 4 张</span>
+    <span class="chip">⚠️ 反讽·敏感</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" hidden>
+    <b>目录</b>
+    <a href="#orig">起源与出处</a>
+    <a href="#tl">走红时间线</a>
+    <a href="#use">含义与用法</a>
+    <a href="#quote">经典例句</a>
+    <a href="#gallery">梗图图鉴</a>
+    <a href="#data">数据佐证</a>
+    <a href="#src">信源列表</a>
+    <a href="#warn">注意事项</a>
+  </nav>
+
+  <main class="content">
+
+    <h2 class="section" id="orig">起源与出处</h2>
+    <p>三层结构："讽刺的讽刺"。第一层是被讽刺的<strong>伪史论内容农场</strong>（声称外国人古称"羊人"，是半人半兽的兽族）；第二层是 B 站 up 主的<strong>讽刺宇宙</strong>"神族TV/伪史tv"（最早可溯 2024-09《喜羊羊是资本扶持的羊人动画》）；第三层是 2025-12 起"大战"叙事定型（<em>羊人盗取永乐大典科技飞升摧毁不周山击败神族</em>）。</p>
+
+    <h2 class="section" id="tl">走红时间线</h2>
+    <div class="tlwrap"><ul class="tl">
+      <li><b>2024-09</b><span>神族TV 讽刺宇宙最早可溯</span></li>
+      <li><b>2025-06</b><span>"永乐大典=超级科技"设定</span></li>
+      <li><b>2025-12</b><span>"羊人vs神族"大战框架成型</span></li>
+      <li><b>2026-07-09</b><span>辟谣视频 28 万播放，话语出圈</span></li>
+      <li><b>2026-07-18</b><span>《华夏神族！一定要挺住！》40 万播放首爆</span></li>
+      <li><b>2026-07-22</b><span>Msettra 定型作 19.6 万播放</span></li>
+      <li><b>2026-08-03</b><span>持续二创（不周山/努尔哈赤）</span></li>
+      <li><b>2026-08-04</b><span>日新说批判 17.5 万播放"离纳粹很近"</span></li>
+      <li><b>2026-08-05</b><span>IPN 评测 40.2 万播放——峰值</span></li>
+    </ul></div>
+
+    <h2 class="section" id="use">含义与用法</h2>
+    <p><strong>梗内设定</strong>：华夏神族=中国人（被神化为天界正统），羊人=外国人（"洋人"谐音+伪史论"半兽人"说法字面化）。<strong>用法</strong>：讽刺伪史论内容农场，抽象话式解构。**双刃剑**：戏仿对象含种族贬损话语，批评者指出玩梗在放大"外国人非人化"话语。</p>
+
+    <h2 class="section" id="quote">经典例句</h2>
+    <blockquote>"华夏神族，一定要挺住！"</blockquote>
+    <blockquote>"太典了，这波是羊人又偷永乐大典了。"</blockquote>
+    <blockquote>"不周山时期我们就该把羊人训服的。"</blockquote>
+
+    <h2 class="section" id="gallery">梗图图鉴</h2>
+    <div class="gallery">
+      <figure><img class="meme" alt="cover1" src="http://i1.hdslb.com/bfs/archive/1ca0e04e83e57e988343a934e49ef7eee7f13fcf.jpg"><figcaption>流量峰值二创《乐典TV之华夏神族大战羊人》评测封面（T1）</figcaption></figure>
+      <figure><img class="meme" alt="cover2" src="http://i1.hdslb.com/bfs/archive/31e228885871cd3a87b150999912472b3c9abd11.jpg"><figcaption>《伪史论之华夏神族大战羊人小伙儿》封面（T1）</figcaption></figure>
+      <figure><img class="meme" alt="img3" src="http://i0.hdslb.com/bfs/new_dyn/e8018cd30eebbf82deaae793b1a0461a40484418.jpg"><figcaption>2563 赞评论配图："然而事实真的如此吗？"（T2）</figcaption></figure>
+      <figure><img class="meme" alt="img4" src="http://i0.hdslb.com/bfs/new_dyn/a86a822f7488f4809cbeee6496e3df248233965.jpg"><figcaption>2254 赞评论配图："对上了，都对上了😨"（T2）</figcaption></figure>
+    </div>
+
+    <h2 class="section" id="data">数据佐证</h2>
+    <p>IPN 评测 40.2 万播放/6174 收藏（2026-08-05）；华夏神族挺住 40 万播放/9784 分享（2026-07-18）；辟谣 28.3 万（2026-07-09）；定型作 19.6 万（2026-07-22）；批判 17.5 万（2026-08-04）。</p>
+
+    <h2 class="section" id="src">信源列表</h2>
+    <ol class="src">
+      <li>B站 沛雨の不胜传说：《IPN 4分评测》（流量峰值二创评测）<a href="https://www.bilibili.com/video/BV1iAMC6zEyw" target="_blank">BV1iAMC6zEyw</a></li>
+      <li>B站 Msettra：《伪史论之华夏神族大战羊人小伙儿》（世界观定型作）<a href="https://www.bilibili.com/video/BV1LaKa6AEcj" target="_blank">BV1LaKa6AEcj</a></li>
+      <li>B站 日新说Copernicium：《"羊人"伪史论离人很远，离纳粹很近》（严肃批判）<a href="https://www.bilibili.com/video/BV1Uauc6kE3X" target="_blank">BV1Uauc6kE3X</a></li>
+      <li>B站 为啥子让风吹：《辟谣：外国人是羊、怪物、半兽人进化而来？谣言！》<a href="https://www.bilibili.com/video/BV1xDMG6KEQB" target="_blank">BV1xDMG6KEQB</a></li>
+      <li>B站 神族TV 系列最早可溯：《喜羊羊是资本扶持的羊人动画》<a href="https://www.bilibili.com/video/BV1j3uM6gEW2" target="_blank">BV1j3uM6gEW2</a></li>
+    </ol>
+
+    <h2 class="section" id="warn">注意事项</h2>
+    <p><strong>待考证</strong>：乐典TV 原始视频内容；"羊人=洋人"谐音是否为最早动机；可能早于 2024-09 的更早记录。<strong>敏感</strong>：戏仿对象含种族贬损话语，引用时仅作事实陈述，危险设定（吃人肉/返祖）勿脱离批判语境传播。</p>
+
+    <footer class="footer">
+      生成工具: meme-researcher (PROTOTYPE) · 数据: B站/评论 · 单文件自包含目标：图片 base64 内嵌，可离线分享
+    </footer>
+  </main>
+</div>
+
+<div class="switcher">
+  <span style="align-self:center">风格</span>
+  <button data-v="a">A 百科经典</button>
+  <button data-v="b">B 杂志卡片</button>
+  <button data-v="c">C 暗色档案馆</button>
+</div>
+
+<script>
+(function(){
+  var v = new URLSearchParams(location.search).get("variant") || "a";
+  if(!["a","b","c"].includes(v)) v = "a";
+  var body = document.body;
+  function apply(val){
+    body.setAttribute("data-variant", val);
+    document.querySelectorAll(".switcher button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-v") === val);
+    });
+    // 仅 A 方案显示侧栏目录
+    var toc = document.querySelector(".toc");
+    if(toc) toc.hidden = (val !== "a");
+    history.replaceState(null, "", "?variant=" + val);
+  }
+  apply(v);
+  document.querySelectorAll(".switcher button").forEach(function(b){
+    b.addEventListener("click", function(){ apply(b.getAttribute("data-v")); });
+  });
+})();
+</script>
+</body>
+</html>

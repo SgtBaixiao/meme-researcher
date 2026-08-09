@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深度调研 · 如何训练一个 meme 搜索 Subagent</title>
+<style>
+:root{
+  --bg:#0b0d14; --surface:#0e1220; --surface2:#131a2c; --line:#232c42; --line2:#2c3450;
+  --ink:#d7dce6; --ink-soft:#9aa3b5; --ink-dim:#5d6a80;
+  --accent:#a855f7; --accent2:#8fd3ff; --accent3:#ffd166; --ok:#4ade80; --warn:#f87171;
+  --mono:ui-monospace,"SFMono-Regular",Consolas,"PingFang SC",monospace;
+  --sans:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.8;font-size:15px}
+a{color:var(--accent2);text-decoration:none;border-bottom:1px dotted var(--line2)}
+a:hover{color:#fff}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--accent3)}
+.hero{padding:64px 20px 36px;text-align:center;
+  background:radial-gradient(1100px 480px at 50% -140px,rgba(168,85,247,.16),transparent),
+             radial-gradient(800px 380px at 88% 0,rgba(59,130,246,.12),transparent)}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:var(--accent)}
+h1{font-size:clamp(23px,4.2vw,38px);font-weight:800;color:#f5f3ff;margin-top:12px;text-shadow:0 0 30px rgba(168,85,247,.35)}
+.sub{max-width:780px;margin:16px auto 0;color:var(--ink-soft);font-size:14px}
+.meta{margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line2);border-radius:4px;padding:3px 12px;color:var(--accent2);background:var(--surface)}
+.layout{max-width:1060px;margin:0 auto;padding:24px 20px 80px;display:grid;grid-template-columns:230px 1fr;gap:30px}
+.toc{position:sticky;top:20px;align-self:start;font-size:13px}
+.toc h3{font-family:var(--mono);font-size:11px;letter-spacing:.25em;color:var(--ink-dim);margin-bottom:12px}
+.toc a{display:block;padding:4px 0;color:var(--ink-soft);border:0;font-size:13px}
+.toc a:hover{color:var(--accent2)}
+.toc .n{color:var(--accent);font-family:var(--mono);font-size:11px;margin-right:6px}
+main{min-width:0}
+section{margin-top:38px}
+h2{font-family:var(--mono);font-size:15px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+h2::before{content:"// ";color:var(--ink-dim)}
+h3{font-size:17px;color:#f0eefc;margin:24px 0 8px;font-weight:700}
+p{margin:10px 0;color:var(--ink-soft)}
+p strong{color:var(--ink)}
+ul,ol{margin:10px 0 10px 26px;color:var(--ink-soft)}
+li{margin:6px 0}
+blockquote{border-left:2px solid var(--accent);background:rgba(168,85,247,.06);padding:10px 16px;margin:14px 0;color:#d8c9f5;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:12px 0}
+.card h4{font-size:14.5px;color:var(--accent3);margin-bottom:6px;font-weight:700}
+.card p{font-size:13.5px;margin:6px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+th{background:var(--surface2);color:var(--accent2);text-align:left;padding:9px 12px;font-family:var(--mono);font-size:11.5px}
+td{padding:8px 12px;border-top:1px solid var(--line);color:var(--ink-soft)}
+td:first-child{color:var(--ink);font-family:var(--mono);font-size:12px}
+.ev{font-family:var(--mono);font-size:10.5px;color:var(--accent3);border:1px solid var(--line2);border-radius:3px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+.conf{font-family:var(--mono);font-size:10.5px;padding:1px 7px;border-radius:3px;margin-left:4px}
+.conf-strong{background:rgba(74,222,128,.15);color:var(--ok);border:1px solid rgba(74,222,128,.35)}
+.conf-soft{background:rgba(143,211,255,.12);color:var(--accent2);border:1px solid rgba(143,211,255,.3)}
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:14px 0}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;position:relative}
+.stage .sno{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.2em}
+.stage h4{font-size:14px;color:#f0eefc;margin:4px 0 6px}
+.stage p{font-size:12px;color:var(--ink-soft);margin:0}
+.road{list-style:none;margin:14px 0 0;border-left:2px dashed var(--line2);padding-left:22px}
+.road li{position:relative;margin:16px 0}
+.road li::before{content:"▸";position:absolute;left:-27px;color:var(--accent)}
+.road b{color:var(--accent3);font-family:var(--mono);font-size:12.5px}
+.road span{color:var(--ink-soft);font-size:13.5px}
+footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink-dim);font-size:12px;font-family:var(--mono)}
+.reflist{list-style:none;counter-reset:ref}
+.reflist li{counter-increment:ref;margin:8px 0;font-size:13px;color:var(--ink-soft)}
+.reflist li::before{content:"[" counter(ref) "]";font-family:var(--mono);color:var(--accent);margin-right:8px}
+@media(max-width:820px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="kicker">DEEP RESEARCH · TRAINING THE MEME SEARCH SUBAGENT</p>
+  <h1>如何训练一个 subagent 进行 meme 搜索</h1>
+  <p class="sub">从"给模型一个 prompt"到"培养一个网络梗考古研究员"——无梯度语言级训练课程：知识编码 → 示范 → 练习评测 → 反馈闭环 → 运行时学习。全部结论附文献证据。</p>
+  <div class="meta">
+    <span class="chip">5 论文 + Anthropic 研究系统 + harness 机制</span>
+    <span class="chip">对象: meme-researcher subagent</span>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc">
+  <h3>目录</h3>
+  <a href="#s0"><span class="n">00</span>核心论点</a>
+  <a href="#s1"><span class="n">01</span>"训练"对 agent 的含义</a>
+  <a href="#s2"><span class="n">02</span>文献基础</a>
+  <a href="#s3"><span class="n">03</span>五阶段训练课程</a>
+  <a href="#s4"><span class="n">04</span>meme 专项要点</a>
+  <a href="#s5"><span class="n">05</span>评测指标</a>
+  <a href="#s6"><span class="n">06</span>落地清单</a>
+  <a href="#s7"><span class="n">07</span>信源附录</a>
+</nav>
+
+<main>
+
+<section id="s0">
+<h2>核心论点</h2>
+<div class="card">
+  <h4>T1 — 训练 subagent = 五阶段无梯度课程，不是微调</h4>
+  <p>文献一致指向"训练免梯度"的可行路线：Voyager 用<strong>技能库</strong>实现终身学习<span class="ev">[2]</span>；Reflexion 用<strong>语言自反思</strong>从试错中学习<span class="ev">[1]</span>；《Training Language Agents to Learn from Experience》证明经验可蒸馏为<strong>可复用教训</strong><span class="ev">[4]</span>；《Closing the Feedback Loop》提出<strong>Insight Governance</strong>——把反馈提取为语言规则再注入上下文<span class="ev">[5]</span>。五阶段：编码→示范→练习→反馈→运行时学习。</p>
+  <h4>T2 — 训练的核心产物是"技能库 + 教训库 + 案例库"</h4>
+  <p>Voyager 的技能库 = 我们的 meme-digger skill 与脚本套件；教训库 = 每次调查后沉淀的 lessons；案例库 = 黄金调查（正例）+ 失败调查（反例）。三者都是文件，不是权重。</p>
+  <h4>T3 — 单代理不够时，用多代理分工（Anthropic 实证）</h4>
+  <p>Anthropic 研究系统：多代理主要因为"花够 token 把问题解出来"；子代理提供<strong>分离关注点（工具/prompt/探索轨迹各自独立）</strong>，单代理串行搜索会失败<span class="ev">[6]</span>。meme 多义梗 = 天然并行场景。</p>
+  <h4>T4 — 训练效果必须有评测闭环兜底</h4>
+  <p>评分卡 + 解析器回归 + LLM-as-judge（GPT-4V 美学对齐实证<span class="ev">[7]</span>），低分样本回流为反例——"训练"才真正发生。</p>
+</div>
+</section>
+
+<section id="s1">
+<h2>"训练"对 agent 的含义</h2>
+<p>在 agent 范式下，"训练"不是更新权重，而是<strong>改变 agent 每次运行时读到的上下文与可用工具</strong>。三类手段叠加：</p>
+<table>
+  <tr><th>手段</th><th>载体</th><th>持久性</th></tr>
+  <tr><td>知识编码</td><td>skill / agent 配置 / 系统提示</td><td>静态（随版本迭代）</td></tr>
+  <tr><td>少样本示范</td><td>黄金调查案例库（few-shot）</td><td>静态，可扩充</td></tr>
+  <tr><td>经验回流</td><td>教训库 + meme-index（动态注入）</td><td><strong>运行时增长</strong></td></tr>
+</table>
+<p><strong>推论</strong>：subagent 的"训练度"= 编码质量 × 案例覆盖 × 反馈回路闭合度。三者都可测量、可迭代——这正是本报告要设计的内容。</p>
+</section>
+
+<section id="s2">
+<h2>文献基础（六项证据）</h2>
+<div class="card"><h4>① Voyager — 技能库即训练产物</h4><p>LLM 驱动的终身学习 agent：自动课程 + 技能库 + 迭代自我优化，无人干预地持续获取技能<span class="ev">[2]</span>。→ 我们把 MSM 七层、脚本、模板做成 meme-digger skill，等价于它的技能库；每次调查成功的新"打法"（如某平台新端点）应回写 skill。</p></div>
+<div class="card"><h4>② Reflexion — 语言自反思（verbal RL）</h4><p>agent 从试错中快速学习：失败 → 反思文本 → 注入下一轮<span class="ev">[1]</span>。Meta-Policy 变体把反思蒸馏为跨任务可复用记忆<span class="ev">[8]</span>。→ subagent 每次调查结束强制"复盘块"：哪一步失败、为何、下次怎么做。</p></div>
+<div class="card"><h4>③ 经验蒸馏 — 把经历变成教训</h4><p>交互经验可被蒸馏为可复用教训，提升未来任务表现<span class="ev">[4]</span>；Contextual Experience Replay 支持持续学习<span class="ev">[9]</span>。→ 调查后把教训写入 <code>meme-research/lessons.md</code>（全局），下次调查前注入。</p></div>
+<div class="card"><h4>④ Insight Governance — 免训练的反馈闭环</h4><p>把世界反馈（任务结果/市场信号）提取为语言规则，以"上下文注入"方式治理，无梯度<span class="ev">[5]</span>。→ 我们的评分卡分数 → 提炼规则 → 更新 SKILL.md/教训库：完整闭环。</p></div>
+<div class="card"><h4>⑤ Anthropic 多代理研究系统 — 子代理分工实证</h4><p>研究者子代理各自独立工具/prompt/探索轨迹（分离关注点、减少路径依赖）；多代理有效的主因是"花够 token 把问题解出来"，单代理串行会失败<span class="ev">[6]</span>。→ meme 多义梗用 parallel 多研究员；但先做对单研究员，再并行（Anthropic 也指出多代理引入协调/评测/可靠性挑战<span class="ev">[6]</span>）。</p></div>
+<div class="card"><h4>⑥ LLM-as-Judge — 训练效果的裁判</h4><p>GPT-4V 审美判断与人类对齐<span class="ev">[7]</span>；传统美学度量（对称/连贯/复杂度/对比）可脚本化<span class="ev">[10]</span>。→ 报告质量与风格符合度交给 LLM 裁判打分，低分样本进反例库。</p></div>
+</section>
+
+<section id="s3">
+<h2>五阶段训练课程（meme 搜索专用）</h2>
+<div class="pipe">
+  <div class="stage"><div class="sno">S1 · 编码</div><h4>领域知识入库</h4><p>MSM 七层 + 平台路由表 + 信源分级 + 输出模板 → meme-digger skill；脚本套件为深度工具模块</p></div>
+  <div class="stage"><div class="sno">S2 · 示范</div><h4>案例库（正反例）</h4><p>黄金调查 2-3 个（如"华夏神族大战羊人"完整链路）+ 失败反例（第一次全收错梗图）</p></div>
+  <div class="stage"><div class="sno">S3 · 练习</div><h4>分级评测</h4><p>课程按难度递增：简单梗→多义梗→反讽梗→新梗；每级跑通才升级</p></div>
+  <div class="stage"><div class="sno">S4 · 反馈</div><h4>Reflexion 复盘</h4><p>每次调查后自反思 → 教训蒸馏入 lessons.md → 定期回写 SKILL.md</p></div>
+  <div class="stage"><div class="sno">S5 · 运行</div><h4>运行时学习</h4><p>meme-index 跨调查知识 + 新端点/新平台打法回写 skill；多义梗 parallel</p></div>
+</div>
+
+<h3>S1 编码（静态，一次做好）</h3>
+<ul>
+  <li><strong>角色规范</strong>（agent 配置）：身份、边界（娱乐）、工具白名单、强制先读 SKILL.md。</li>
+  <li><strong>流程规范</strong>（skill）：MSM 七层 + 发散-收敛终止条件 + 输出模板 + 安全规则（注入中立化）。</li>
+  <li><strong>工具</strong>：8 个脚本 = 深度模块；agent 只学 CLI 接口。</li>
+</ul>
+<h3>S2 示范（few-shot，质量大于数量）</h3>
+<ul>
+  <li>正例：1-2 个完整"调查-报告"工作区快照（含各阶段文件），供模仿。</li>
+  <li>反例：明确标注的失败案例——如"无差别下载评论图 → 梗图全错"——并写明修正规则（分级 T1-T4 + 评分 + 复核）。<span class="conf conf-strong">已具真实反例</span></li>
+</ul>
+<h3>S3 练习与评测（分级通过制）</h3>
+<ol>
+  <li><strong>Lv1 简单梗</strong>：单义、有科普视频 → 验证基本链路（搜→挖→验→HTML）。</li>
+  <li><strong>Lv2 多义梗</strong>：必须走 L0 澄清；评测"义项选择正确率"。</li>
+  <li><strong>Lv3 反讽梗</strong>：评测"是否识别反讽并标注讽刺对象/原话"（伪史宇宙类）。</li>
+  <li><strong>Lv4 新梗</strong>：无稳定记录 → 评测"是否诚实标注待考证、不编造"。</li>
+</ol>
+<p>每级：评分卡（完整性/证据/时间线/梗图/风格）≥ 阈值才进入下一级。<span class="conf conf-strong">评分卡+LLM裁判</span></p>
+<h3>S4 反馈闭环（训练真正发生的地方）</h3>
+<blockquote>调查结束强制复盘：<code>成功项 / 失败项 / 教训（可复用规则） / 建议（更新 skill 或脚本）</code>。教训追加进 <code>meme-research/lessons.md</code>；每 5 条教训 → 审查并合并进 SKILL.md。<span class="ev">[1][4][5]</span></blockquote>
+<h3>S5 运行时学习（越用越强）</h3>
+<ul>
+  <li>meme-index.json：每调查登记 slug/别名/相关梗/信源 → 新调查自动关联已有知识。</li>
+  <li>新端点/新打法（如发现某平台新 API）回写 skill —— Voyager 式技能库增长<span class="ev">[2]</span>。</li>
+  <li>多义梗：主代理 parallel 派出 N 个研究员各挖一义，leader 汇总 —— Anthropic 式分工<span class="ev">[6]</span>（Phase 4）。</li>
+</ul>
+</section>
+
+<section id="s4">
+<h2>meme 专项训练要点（7 个失败特性的对策）</h2>
+<table>
+  <tr><th>特性</th><th>训练对策（写入 skill 的规则）</th></tr>
+  <tr><td>多义性</td><td>L0 强制澄清；词表化查询扩展；Lv2 专项评测</td></tr>
+  <tr><td>时效性</td><td>时间线锚定 pubdate；报告标注"记录截至"；新梗判级 Lv4</td></tr>
+  <tr><td>平台隔离</td><td>平台路由表（贴吧起源/B站扩散）；cookie 就绪度检查</td></tr>
+  <tr><td>图文双模态</td><td>T1-T4 分级 + 评分模型 + 强制人工复核；反例教学</td></tr>
+  <tr><td>变体演化</td><td>别名/谐音/缩写词表；meme-index 相关梗互跳</td></tr>
+  <tr><td>语义反转</td><td>反讽检测规则：声明"目的为讽刺"的视频、批判性信源、评论区争议；报告强制"字面 vs 讽刺对象"双轨</td></tr>
+  <tr><td>社区记忆</td><td>评论区挖掘 = 固定步骤；高赞评论作为共识证据（P2 级）</td></tr>
+</table>
+</section>
+
+<section id="s5">
+<h2>评测指标（训练效果可度量）</h2>
+<table>
+  <tr><th>指标</th><th>定义</th><th>手段</th></tr>
+  <tr><td>完成率</td><td>工作区 8 文件 + HTML 全部产出</td><td>文件检查（脚本）</td></tr>
+  <tr><td>编造率</td><td>无信源论断占比（应趋近 0）</td><td>LLM 裁判 + 人工抽检</td></tr>
+  <tr><td>证据达标率</td><td>关键论断 ≥2 信源 / 待考证显式标注</td><td>评分卡</td></tr>
+  <tr><td>梗图准确率</td><td>入库梗图与梗相关比例</td><td>人工复核（当前）→ GPT-4V（Phase 3）</td></tr>
+  <tr><td>风格符合度</td><td>产出 HTML 符合 house style（令牌合规）</td><td>令牌 lint + LLM 裁判</td></tr>
+  <tr><td>迭代进步率</td><td>同一课程题目的重测分数提升</td><td>课程重测</td></tr>
+</table>
+</section>
+
+<section id="s6">
+<h2>落地清单（从今天开始）</h2>
+<ul class="road">
+  <li><b>Step 1</b> · <span>固化 S1：写 <code>meme-researcher.md</code> agent 配置（角色/工具/强制流程）+ skill 校准</span></li>
+  <li><b>Step 2</b> · <span>建案例库：把"华夏神族大战羊人"工作区归档为黄金正例；写"梗图全错"反例页</span></li>
+  <li><b>Step 3</b> · <span>建 lessons.md 与 meme-index.json 骨架（S4/S5 载体）</span></li>
+  <li><b>Step 4</b> · <span>评分卡落地：5 指标 × 5 分制，每次调查后强制填写；LLM 裁判脚本化（Phase 3）</span></li>
+  <li><b>Step 5</b> · <span>跑 Lv1-Lv4 分级课程，记录分数基线 → 迭代 skill 与反例库</span></li>
+</ul>
+</section>
+
+<section id="s7">
+<h2>信源附录</h2>
+<ol class="reflist">
+  <li>Shinn et al. — <em>Reflexion: Language Agents with Verbal Reinforcement Learning</em> (arXiv) <span class="ev">摘要</span></li>
+  <li>Wang et al. — <em>Voyager: An Open-Ended Embodied Agent with Large Language Models</em> (arXiv) <span class="ev">摘要</span></li>
+  <li>Anthropic — <em>Building Effective Agents</em>（2024-12）<span class="ev">原文已抓取</span></li>
+  <li><em>Training Language Agents to Learn from Experience</em> (arXiv) <span class="ev">摘要</span></li>
+  <li><em>Closing the Feedback Loop: From Experience Extraction to Insight Governance in Verbal RL</em> (arXiv) <span class="ev">摘要</span></li>
+  <li>Anthropic — <em>How we built our multi-agent research system</em> <span class="ev">原文已抓取</span></li>
+  <li><em>Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision</em> (arXiv) <span class="ev">摘要</span></li>
+  <li><em>Meta-Policy Reflexion: Reusable Reflective Memory</em> (arXiv) <span class="ev">摘要</span></li>
+  <li><em>Contextual Experience Replay for Self-Improvement of Language Agents</em> (arXiv) <span class="ev">摘要</span></li>
+  <li><em>Understanding Aesthetic Evaluation using Deep Learning</em> (arXiv) <span class="ev">摘要</span></li>
+</ol>
+<footer>
+  DEEP RESEARCH · TRAINING CURRICULUM FOR meme-researcher · 单文件自包含 · 令牌驱动样式
+</footer>
+</main>
+</div>
+</body>
+</html>
