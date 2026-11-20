@@ -2,3 +2,6 @@ work/
 __pycache__/
 *.pyc
 .DS_Store
+meme-research/
+meme-index.json
+config/cookies.json
