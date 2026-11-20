@@ -1,7 +1,9 @@
 # Meme Researcher Subagent — SPECIFICATION
 
 > 状态：v1 定稿 | 范围：把 meme-digger 深化为 pi subagent（仅娱乐用途）
-> 关联：`../meme-researcher-subagent-design.md`（方法调研）、`prototype/meme-report-prototype.html`（UI 原型）
+> 关联：`meme-researcher-subagent-design.md`（方法调研）、`prototype/meme-report-prototype.html`（UI 原型）
+
+> 2026-11-20 维护说明：本文件保留原始设计。当前能力以仓库 SKILL.md、README.md 和 runtime.md 为准。L0–L7 包含八个阶段；跨调查索引与自动视觉复核仍未实现，平台脚本由 meme-digger 提供。
 
 ---
 
@@ -54,7 +56,7 @@
 - **skill 指针**：subagent 规范首行强制"先 read meme-digger 的 SKILL.md 再开工"（渐进式披露，方法论不进常驻上下文）。
 - **深度模块划分**：每个平台能力 = 一个 CLI 深度模块（小接口、大行为）；研究编排 = agent 遵循 skill 的流程规范；产物生成 = make_report.py（工作目录 → 单 HTML）。
 - **数据契约**：
-  - 工作区 `meme-research/<slug>/`：00-计划 / 01-b站搜索 / 02-b站评论区 / 03-贴吧 / 04-发散线索 / 05-梗图 / 06-来源考证 / 报告-*.md / images/ / <梗名>-百科.html。
+  - 工作区 `meme-research/<slug>/`：00-计划 / 01-b站搜索 / 02-b站评论区 / 03-贴吧 / 04-发散线索 / 05-梗图 / 06-来源考证 / `报告-*.md` / `images/` / `<梗名>-百科.html`。
   - `meme-index.json`：`{slug, title, aliases[], related[], first_seen, last_seen, top_sources[{platform,title,url}], status}`。
 - **验证门（内建于规范）**：每条关键论断 ≥2 独立信源；四档可信度（确凿/考证/传闻/待考证）；反讽类梗强制标注"讽刺对象 + 被讽刺者原话"；发布前人工复核。
 - **安全**：中立化规则（爬取内容先剥离指令形态再入库）；cookie 仅存 `config/cookies.json`（日志脱敏、不入仓库）；HITL 检查点。

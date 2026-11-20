@@ -1,37 +1,27 @@
-# meme-researcher — 网络梗考古研究员（Agent Skill，设计 v1）
+# meme-researcher
 
-深挖版网络梗考古 skill：七层 MSM 方法 + 跨调查索引 + 验证门 + HITL 发布复核。依赖 meme-digger 的脚本套件。
+网络梗考古研究 Skill：整理起源、义项、评论区线索与传播时间线，交付带证据与来源的 HTML 草稿。
 
-> **状态：设计 v1 定稿，待实现。** 本仓库目前是完整规格 + 设计文档 + UI 原型；实现时以 [meme-digger](../meme-digger/) 为底座。
+当前仓库提供 MSM 流程规范、依赖检查和证据文件校验。平台检索与 HTML 生成依赖 [meme-digger](https://github.com/SgtBaixiao/meme-digger)。跨调查索引自动合并、额外平台适配和视觉自动复核尚未实现。
 
-## 安装（实现后）
+## 使用
 
-1. 安装 [meme-digger](../meme-digger/)（脚本套件底座）。
-2. 复制本目录到 `~/.pi/agent/skills/meme-researcher/`（pi）/ `~/.claude/skills/meme-researcher/`（Claude Code）。
-3. （pi）如需 subagent 化：按 `references/meme-researcher-subagent-design.md` 生成 `~/.pi/agent/agents/meme-researcher.md` 配置。
+将本仓库放入目标宿主的 Skill 目录，读取 [SKILL.md](SKILL.md)。安装位置按宿主实际设置选择，pi 的独立研究员配置见 [运行说明](references/runtime.md)。
 
-## 结构
+Python 3.10+，无外部 Python 依赖：
 
-```
-meme-researcher/
-├── SKILL.md                         # 七层 MSM 方法 + 验证门 + 工作区（入口）
-└── references/
-    ├── meme-researcher-subagent-design.md   # 深度设计文档（问题建模 + MSM）
-    ├── SPECIFICATION.md                     # to-spec 完整规格（22 条用户故事）
-    ├── AI-AESTHETIC-STYLE.md                # 五层风格记忆方法
-    ├── RESEARCH.html / RESEARCH-TRAINING.html  # 调研与训练课程
-    └── prototype/meme-report-prototype.html # 报告页 UI 原型
+```bash
+python3 scripts/check_research.py doctor --meme-digger /absolute/path/to/meme-digger
+python3 scripts/check_research.py validate /absolute/path/to/evidence.json
+python3 -m unittest discover -s tests -v
 ```
 
-## 与 meme-digger 的关系
+依赖检查确认文件齐备，平台访问情况由实际请求验证。证据校验检查结构、引用与已声明的来源链，事实核查和独立性复核仍由研究员完成。格式见 [证据契约](references/evidence-contract.md)。
 
-| | meme-digger | meme-researcher |
-|---|---|---|
-| 定位 | 单次调查工作流 | 研究员 subagent（更严谨/更深） |
-| 方法 | 9 步刨根问底 | 七层 MSM + 跨调查索引 |
-| 验证 | 质量标准清单 | 强制验证门 + HITL 发布复核 |
-| 依赖 | 无 | 依赖 meme-digger 脚本 |
+研究结果可作为草稿交付审阅，明确保留未确认事项；用户复核与对外发布分别记录状态。Cookie 使用 meme-digger 的本地配置，运行资料不提交到仓库。
 
-## License
+## 维护
 
-MIT © Sgt_BaiXiao
+当前使用入口是 SKILL.md 和 scripts；[references](references/README.md) 保存需求、设计、教学材料和页面原型。原规格中的 L0–L7 实际包含八个阶段，当前入口统一称 MSM 流程。
+
+GitHub CI 在干净环境运行工具回归，检查当前使用文档的本地链接。MIT，作者 Sgt_BaiXiao。
